@@ -33,10 +33,24 @@ class TestSaleStockAnalytic(TransactionCase):
                 ),
             }
         )
+        cls.sale_order_line = cls.sale_order_line_model.create(
+            {
+                "name": "sale order line test2",
+                "order_id": cls.sale_order.id,
+                "product_id": cls.product.id,
+            }
+        )
 
     def test_sale_stock_analytic(self):
         self.sale_order.action_confirm()
         self.move = self.sale_order.picking_ids.move_ids_without_package
-        self.assertEqual(
-            self.move.analytic_distribution, self.sale_order_line.analytic_distribution
-        )
+        for move in self.move:
+            self.assertTrue(
+                (
+                    "|",
+                    move.analytic_distribution
+                    == self.sale_order_line.analytic_distribution,
+                    move.analytic_distribution
+                    == {str(self.sale_order.analytic_account_id.id): 100.0},
+                )
+            )
